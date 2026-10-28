@@ -1,0 +1,806 @@
+<title>Nomination Form Filler</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one working column of numbered steps, like the paper form; review + preview at the end */
+:root {
+  --bg: #f3f5f6; --card: #ffffff; --ink: #172026; --muted: #5d6b73; --line: #d5dde1;
+  --accent: #0b6477; --accent-soft: #e2f0f3; --accent-ink: #ffffff; --field: #ffffff;
+  --ok: #1d7a45; --warn: #93650b; --bad: #b3261e; --bad-soft: #fbe9e7; --ok-soft: #e5f4ea;
+  --font-body: "Figtree", -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12181b; --card: #1b2327; --ink: #e8eef1; --muted: #9aa9b1; --line: #2e3a40;
+  --accent: #5cc0d4; --accent-soft: #173238; --accent-ink: #0b1417; --field: #12181b;
+  --ok: #5fcf8a; --warn: #e0b04f; --bad: #ff8a80; --bad-soft: #3a1d1b; --ok-soft: #173326; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #12181b; --card: #1b2327; --ink: #e8eef1; --muted: #9aa9b1; --line: #2e3a40;
+  --accent: #5cc0d4; --accent-soft: #173238; --accent-ink: #0b1417; --field: #12181b;
+  --ok: #5fcf8a; --warn: #e0b04f; --bad: #ff8a80; --bad-soft: #3a1d1b; --ok-soft: #173326; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font-body); }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 20px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 14px; }
+header { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px 16px; flex-wrap: wrap; }
+h1 { margin: 0; font-size: 24px; letter-spacing: -0.01em; text-wrap: balance; }
+.sub { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.formcode { font-family: var(--font-mono); font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
+section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; min-width: 0; }
+h2 { margin: 0 0 12px; font-size: 16px; display: flex; gap: 10px; align-items: center; }
+.n { font-family: var(--font-mono); font-size: 12px; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: inline-grid; place-items: center; flex: none; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 16px; }
+.stack { display: grid; gap: 12px; }
+label.f { display: block; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.02em; margin-bottom: 4px; }
+input[type=text], input[type=number] { width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); color: var(--ink); font: inherit; text-transform: uppercase; }
+input.mono { font-family: var(--font-mono); letter-spacing: 0.04em; }
+input:focus-visible, button:focus-visible, .chips label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 1px; }
+input.invalid { border-color: var(--bad); }
+.hint { font-size: 12px; color: var(--muted); margin-top: 3px; min-height: 16px; }
+.hint.bad { color: var(--bad); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chips label { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; font-size: 14px; background: var(--field); }
+.chips input[type=radio], .chips input[type=checkbox] { margin: 0; accent-color: var(--accent); }
+.chips label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.chips input[type=text] { width: 170px; }
+button { font: inherit; font-weight: 600; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button.link { border: 0; background: none; color: var(--accent); padding: 0; font-weight: 500; text-decoration: underline; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+.row { display: flex; gap: 10px 14px; align-items: center; flex-wrap: wrap; }
+.nominee { border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 10px; padding: 14px; display: grid; gap: 12px; }
+.nominee h3 { margin: 0; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+.total { display: flex; align-items: center; gap: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bar { flex: 1; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+.total.done .bar i { background: var(--ok); } .total.over .bar i { background: var(--bad); }
+.notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 14px; }
+.ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); } .muted { color: var(--muted); }
+.banner { padding: 10px 12px; border-radius: 8px; font-size: 14px; }
+.banner.ok { background: var(--ok-soft); } .banner.bad { background: var(--bad-soft); }
+.privacy { font-size: 13px; color: var(--muted); background: var(--accent-soft); border-radius: 8px; padding: 8px 12px; }
+.pages { display: grid; gap: 10px; }
+.pages canvas { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+.sig { max-height: 60px; max-width: 160px; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 4px; }
+details summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Nomination Form Filler</h1>
+      <p class="sub">Appointment / Change of Nominee(s). Fill the details, check, download the PDF.</p>
+    </div>
+    <span class="formcode">NBZ-FNOMI-V07-082025</span>
+  </header>
+  <div class="privacy">Everything is filled inside your browser. Client details are not uploaded or saved anywhere.
+    <button class="link" id="example" type="button">Try with example data</button></div>
+
+  <section>
+    <h2><span class="n">1</span>Policy &amp; policyholder</h2>
+    <div class="stack">
+      <div class="grid">
+        <div><label class="f" for="policyNo">Policy No.</label><input type="text" id="policyNo" class="mono" maxlength="12" autocomplete="off"><div class="hint"></div></div>
+        <div><label class="f" for="name">Full name as per NRIC</label><input type="text" id="name" autocomplete="off"><div class="hint"></div></div>
+        <div><label class="f" for="nric">NRIC (12 digits)</label><input type="text" id="nric" class="mono" maxlength="14" inputmode="numeric" autocomplete="off"><div class="hint"></div></div>
+      </div>
+      <div><label class="f">Are you a Muslim?</label><div class="chips">
+        <label><input type="radio" name="muslim" value="no">No</label><label><input type="radio" name="muslim" value="yes">Yes</label></div></div>
+      <div><label class="f">Status</label><div class="chips">
+        <label><input type="radio" name="status" value="MARRIED">Married</label><label><input type="radio" name="status" value="SINGLE">Single</label>
+        <label><input type="radio" name="status" value="DIVORCED">Divorced</label><label><input type="radio" name="status" value="WIDOWED">Widowed</label></div></div>
+      <div class="grid"><div><label class="f" for="children">Number of children (0 = none)</label><input type="number" id="children" min="0" max="20" inputmode="numeric"><div class="hint"></div></div></div>
+      <details id="addrBox"><summary>Policyholder address (used when a nominee has the same address)</summary>
+        <div class="grid" style="margin-top:10px">
+          <div><label class="f" for="a1">Address line 1</label><input type="text" id="a1"></div>
+          <div><label class="f" for="a2">Address line 2</label><input type="text" id="a2"></div>
+          <div><label class="f" for="a3">Address line 3</label><input type="text" id="a3"></div>
+          <div><label class="f" for="apc">Postcode</label><input type="text" id="apc" class="mono" maxlength="5" inputmode="numeric"></div>
+          <div><label class="f" for="atown">Town</label><input type="text" id="atown"></div>
+          <div><label class="f" for="acountry">Country</label><input type="text" id="acountry" value="MALAYSIA"></div>
+        </div></details>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span>Nominees</h2>
+    <p class="muted" style="margin:0 0 4px;font-size:13px">Shares must add up to 100%. The next nominee opens automatically while the total is under 100% (up to 4, as on the form).</p>
+    <div id="nominees" class="stack"></div>
+    <div class="total" id="total" style="margin-top:12px"><span id="totalText">Total 0%</span><div class="bar"><i id="totalBar"></i></div></div>
+  </section>
+
+  <section>
+    <h2>Trustees <span class="muted" style="font-weight:400;font-size:13px">(optional · Part 2, page 4)</span></h2>
+    <p class="muted" style="margin:0 0 4px;font-size:13px">Up to 2. The policyholder cannot be their own trustee. The witness below is printed on page 4.</p>
+    <div id="trustees" class="stack"></div>
+    <div><button type="button" id="addTrustee" style="margin-top:10px">+ Add trustee</button></div>
+  </section>
+
+  <section>
+    <h2>Consent of existing nominees/trustees <span class="muted" style="font-weight:400;font-size:13px">(optional · Part 3, page 5)</span></h2>
+    <p class="muted" style="margin:0 0 4px;font-size:13px">Only when revoking nominees of an existing trust nomination. Up to 4. The witness below is printed in each column.</p>
+    <div id="consents" class="stack"></div>
+    <div><button type="button" id="addConsent" style="margin-top:10px">+ Add person</button></div>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span>Date &amp; witness</h2>
+    <div class="stack">
+      <div class="grid">
+        <div><label class="f" for="formDate">Date (DD/MM/YYYY)</label><input type="text" id="formDate" class="mono" maxlength="10"><div class="hint" id="dateHint">Set to today. Change it if the client signs on another day.</div></div>
+        <div><label class="f" for="agentName">Witness name (agent)</label><input type="text" id="agentName"><div class="hint"></div></div>
+        <div><label class="f" for="agentCode">IAC No. (7 digits)</label><input type="text" id="agentCode" class="mono" maxlength="7" inputmode="numeric"><div class="hint"></div></div>
+      </div>
+      <div>
+        <label class="f" for="sigFile">Witness signature image (optional)</label>
+        <div class="row">
+          <input type="file" id="sigFile" accept="image/png,image/jpeg">
+          <img id="sigPreview" class="sig" alt="Signature preview" hidden>
+          <button class="link" id="sigClear" type="button" hidden>Remove</button>
+        </div>
+        <div class="chips" style="margin-top:8px"><label><input type="checkbox" id="sigRemember"> Remember my name, IAC and signature on this device</label></div>
+        <div class="hint">Use a pre-signed copy only when the client signs in front of you.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="row"><button class="primary" id="make" type="button">Check &amp; preview</button><span class="muted" id="makeStatus"></span></div>
+
+  <section id="resultBox" hidden>
+    <h2><span class="n">4</span>Review &amp; download</h2>
+    <div class="stack">
+      <ul class="notes" id="review"></ul>
+      <div class="chips" id="acceptRow" hidden><label><input type="checkbox" id="accept"> I'll fill the blank or flagged fields by hand</label></div>
+      <div class="row"><button class="primary" id="download" type="button">Approve &amp; download PDF</button><span id="dlMsg" class="muted"></span></div>
+      <details open><summary>Preview (pages 1–5)</summary><div class="pages" id="pages" style="margin-top:10px"></div></details>
+    </div>
+  </section>
+
+  <details><summary>Recent forms on this device</summary><ul class="notes" id="history" style="margin-top:8px"></ul></details>
+</div>
+
+<template id="nomTpl">
+  <div class="nominee">
+    <h3><span class="title">Nominee</span><button type="button" class="link remove">Remove</button></h3>
+    <div class="grid">
+      <div><label class="f">Full name as per NRIC</label><input type="text" data-k="name" autocomplete="off"><div class="hint"></div></div>
+      <div><label class="f">NRIC (12 digits)</label><input type="text" data-k="nric" class="mono" maxlength="14" inputmode="numeric" autocomplete="off"><div class="hint"></div></div>
+      <div><label class="f">Date of birth DD/MM/YYYY</label><input type="text" data-k="dob" class="mono" maxlength="10"><div class="hint"></div></div>
+      <div><label class="f">Share %</label><input type="number" data-k="percent" min="1" max="100" inputmode="decimal"><div class="hint"></div></div>
+    </div>
+    <div><label class="f">Nationality</label><div class="chips nat">
+      <label><input type="radio" value="MALAYSIAN">Malaysian</label><label><input type="radio" value="OTHERS">Others</label>
+      <input type="text" data-k="natOther" placeholder="Please state" maxlength="16" hidden></div></div>
+    <div><label class="f">Relationship to policyholder</label><div class="chips rel">
+      <label><input type="radio" value="HUSBAND">Husband</label><label><input type="radio" value="WIFE">Wife</label>
+      <label><input type="radio" value="SON">Son</label><label><input type="radio" value="DAUGHTER">Daughter</label>
+      <label><input type="radio" value="FATHER">Father</label><label><input type="radio" value="MOTHER">Mother</label>
+      <label><input type="radio" value="BROTHER">Brother</label><label><input type="radio" value="SISTER">Sister</label>
+      <label><input type="radio" value="OTHERS">Others</label>
+      <input type="text" data-k="relOther" placeholder="Please state" maxlength="12" hidden></div></div>
+    <div><label class="f">Mailing address</label><div class="chips addrChoice">
+      <label><input type="radio" value="same">Same as policyholder</label><label><input type="radio" value="new">Different address</label></div>
+      <div class="hint sameText"></div></div>
+    <div class="grid addr" hidden>
+      <div><label class="f">Address line 1</label><input type="text" data-k="l1"></div>
+      <div><label class="f">Address line 2</label><input type="text" data-k="l2"></div>
+      <div><label class="f">Address line 3</label><input type="text" data-k="l3"></div>
+      <div><label class="f">Postcode</label><input type="text" data-k="pc" class="mono" maxlength="5" inputmode="numeric"></div>
+      <div><label class="f">Town</label><input type="text" data-k="town"></div>
+      <div><label class="f">Country</label><input type="text" data-k="country" value="MALAYSIA"></div>
+    </div>
+  </div>
+</template>
+
+<template id="trusteeTpl">
+  <div class="nominee">
+    <h3><span class="title">Trustee</span><button type="button" class="link remove">Remove</button></h3>
+    <div class="grid">
+      <div><label class="f">Full name as per NRIC/passport</label><input type="text" data-k="name" autocomplete="off"><div class="hint"></div></div>
+      <div><label class="f">ID</label><div class="chips idType"><label><input type="radio" value="nric" checked>NRIC</label><label><input type="radio" value="passport">Passport</label></div></div>
+      <div class="byNric"><label class="f">NRIC (12 digits)</label><input type="text" data-k="nric" class="mono" maxlength="14" inputmode="numeric" autocomplete="off"><div class="hint"></div></div>
+      <div class="byPass" hidden><label class="f">Passport no.</label><input type="text" data-k="passport" class="mono" maxlength="12" autocomplete="off"><div class="hint"></div></div>
+      <div class="byPass" hidden><label class="f">Passport expiry DD/MM/YYYY</label><input type="text" data-k="passportExpiry" class="mono" maxlength="10"><div class="hint"></div></div>
+      <div class="byPass" hidden><label class="f">Date of birth DD/MM/YYYY</label><input type="text" data-k="dob" class="mono" maxlength="10"><div class="hint"></div></div>
+    </div>
+    <div class="byPass" hidden><label class="f">Gender</label><div class="chips gender"><label><input type="radio" value="M">Male</label><label><input type="radio" value="F">Female</label></div></div>
+    <div><label class="f">Nationality</label><div class="chips nat"><label><input type="radio" value="MALAYSIAN">Malaysian</label><label><input type="radio" value="OTHERS">Others</label><input type="text" data-k="natOther" placeholder="Please state" maxlength="21" hidden></div></div>
+    <div><label class="f">Country of birth</label><div class="chips cob"><label><input type="radio" value="MALAYSIAN">Malaysia</label><label><input type="radio" value="OTHERS">Others</label><input type="text" data-k="cobOther" placeholder="Please state" maxlength="21" hidden></div></div>
+    <div class="grid">
+      <div><label class="f">Tel no. (e.g. 0123456789)</label><input type="text" data-k="tel" class="mono" maxlength="15" inputmode="tel"><div class="hint">Malaysian numbers are written as +60…</div></div>
+      <div><label class="f">Tel country (only if not Malaysia)</label><input type="text" data-k="telCountry" maxlength="8"></div>
+    </div>
+    <div class="chips telType"><label><input type="radio" value="HOUSE">House</label><label><input type="radio" value="HANDPHONE" checked>Handphone</label><label><input type="radio" value="OFFICE">Office</label></div>
+    <div><label class="f">Mailing address</label><div class="chips addrChoice">
+      <label><input type="radio" value="same">Same as policyholder</label><label><input type="radio" value="new">Different address</label></div>
+      <div class="hint sameText"></div></div>
+    <div class="grid addr" hidden>
+      <div><label class="f">Address line 1</label><input type="text" data-k="l1"></div>
+      <div><label class="f">Address line 2</label><input type="text" data-k="l2"></div>
+      <div><label class="f">Address line 3</label><input type="text" data-k="l3"></div>
+      <div><label class="f">Postcode</label><input type="text" data-k="pc" class="mono" maxlength="5" inputmode="numeric"></div>
+      <div><label class="f">Town</label><input type="text" data-k="town"></div>
+      <div><label class="f">Country</label><input type="text" data-k="country" value="MALAYSIA"></div>
+    </div>
+  </div>
+</template>
+
+<template id="consentTpl">
+  <div class="nominee">
+    <h3><span class="title">Person</span><button type="button" class="link remove">Remove</button></h3>
+    <div class="grid">
+      <div><label class="f">Full name as per NRIC/passport</label><input type="text" data-k="name" autocomplete="off"></div>
+      <div><label class="f">NRIC / passport no.</label><input type="text" data-k="nric" class="mono" maxlength="14" autocomplete="off"></div>
+      <div><label class="f">Signature date DD/MM/YYYY</label><input type="text" data-k="date" class="mono" maxlength="10"><div class="hint">Leave blank to use the form date</div></div>
+    </div>
+  </div>
+</template>
+
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const MAX = 4;
+const RELATIONSHIPS = ['HUSBAND', 'WIFE', 'SON', 'DAUGHTER', 'FATHER', 'MOTHER', 'BROTHER', 'SISTER', 'OTHERS'];
+const DEFAULT_AGENT = { name: 'OOI PHENG SHEN', code: '6408530' };
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+let lastPdf = null, lastMeta = null, sigDataUrl = null;
+
+// ---------- small helpers ----------
+const digits = s => (s || '').replace(/\D/g, '');
+const up = s => (s || '').trim().toUpperCase().replace(/\s+/g, ' ');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+const today = () => { const d = new Date(); return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`; };
+function dobFromNric(ic) {
+  if (!/^\d{12}$/.test(ic)) return '';
+  const yy = +ic.slice(0, 2), nowYY = new Date().getFullYear() % 100;
+  return `${ic.slice(4, 6)}/${ic.slice(2, 4)}/${yy <= nowYY ? 2000 + yy : 1900 + yy}`;
+}
+function validDate(s) {
+  const m = (s || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  const d = m && new Date(+m[3], +m[2] - 1, +m[1]);
+  return !!(d && d.getDate() === +m[1] && d.getMonth() === +m[2] - 1);
+}
+function hint(input, msg, bad) {
+  const h = input.parentElement.querySelector('.hint');
+  if (h) { h.textContent = msg || ''; h.classList.toggle('bad', !!bad); }
+  input.classList.toggle('invalid', !!bad);
+}
+const radio = name => (document.querySelector(`input[name="${name}"]:checked`) || {}).value || '';
+const setRadio = (name, v) => document.querySelectorAll(`input[name="${name}"]`).forEach(r => { r.checked = r.value === v; });
+// Fit words into lines of at most `width` characters
+const wrapWords = (s, width) => s.split(/\s+/).filter(Boolean).reduce((ls, w) => {
+  const last = ls[ls.length - 1];
+  if (last !== undefined && (last + ' ' + w).length <= width) ls[ls.length - 1] = last + ' ' + w; else ls.push(w);
+  return ls;
+}, []);
+
+// ---------- live checks: policyholder ----------
+$('nric').addEventListener('input', e => {
+  const ic = digits(e.target.value);
+  if (!ic) return hint(e.target, '');
+  if (ic.length !== 12) return hint(e.target, `${ic.length} of 12 digits`, true);
+  hint(e.target, `DOB ${dobFromNric(ic)} · ${(+ic.slice(-1)) % 2 ? 'Male' : 'Female'}`);
+});
+$('policyNo').addEventListener('input', e => {
+  const v = e.target.value.trim(), bad = v && !/^[A-Z0-9]{6,12}$/i.test(v);
+  hint(e.target, bad ? 'Use 6–12 letters or digits' : '', bad);
+});
+$('agentCode').addEventListener('input', e => {
+  const v = digits(e.target.value), bad = e.target.value && v.length !== 7;
+  hint(e.target, bad ? 'IAC No. has 7 digits' : '', bad);
+});
+$('formDate').addEventListener('input', e => {
+  const v = e.target.value, ok = validDate(v);
+  hint(e.target, !v ? 'Left blank: fill the date by hand.' : ok ? (v === today() ? 'Today' : '') : `Use DD/MM/YYYY, e.g. ${today()}`, v && !ok);
+});
+
+// ---------- nominees ----------
+let nomSeq = 0;
+function phAddress() {
+  const lines = [$('a1').value, $('a2').value, $('a3').value].map(up).filter(Boolean);
+  return /^\d{5}$/.test($('apc').value) ? [...lines, `${$('apc').value} ${up($('atown').value)}`].join(', ') : '';
+}
+function showSameText(el) {
+  const same = el.querySelector('.addrChoice input[value=same]').checked, h = el.querySelector('.sameText'), a = phAddress();
+  h.textContent = same ? (a ? `Will use: ${a}` : 'Policyholder address is empty. Fill it in step 1, or choose "Different address".') : '';
+  h.classList.toggle('bad', same && !a);
+}
+function addNominee() {
+  const box = $('nominees');
+  if (box.children.length >= MAX) return null;
+  const el = $('nomTpl').content.firstElementChild.cloneNode(true);
+  const seq = ++nomSeq;
+  ['nat', 'rel', 'addrChoice'].forEach(g => el.querySelectorAll(`.${g} input[type=radio]`).forEach(r => { r.name = `${g}${seq}`; }));
+  el.querySelectorAll('[data-k]').forEach(i => { i.id = `n${seq}-${i.dataset.k}`; });
+  const q = k => el.querySelector(`[data-k="${k}"]`);
+  q('nric').addEventListener('input', () => checkNominee(el));
+  q('dob').addEventListener('input', () => checkNominee(el));
+  q('percent').addEventListener('input', () => updateTotal());
+  el.querySelectorAll('.addrChoice input').forEach(r => r.addEventListener('change', () => { el.querySelector('.addr').hidden = r.value !== 'new'; showSameText(el); }));
+  el.querySelectorAll('.rel input[type=radio]').forEach(r => r.addEventListener('change', () => { q('relOther').hidden = r.value !== 'OTHERS'; }));
+  el.querySelectorAll('.nat input[type=radio]').forEach(r => r.addEventListener('change', () => { q('natOther').hidden = r.value !== 'OTHERS'; }));
+  el.querySelector('.remove').addEventListener('click', () => { el.remove(); renumber(); updateTotal(); });
+  box.appendChild(el);
+  renumber();
+  return el;
+}
+function renumber() {
+  const cards = [...$('nominees').children];
+  cards.forEach((el, i) => {
+    el.querySelector('.title').textContent = `Nominee ${i + 1}`;
+    el.querySelector('.remove').hidden = cards.length === 1;
+  });
+}
+function checkNominee(el) {
+  const q = k => el.querySelector(`[data-k="${k}"]`);
+  const ic = digits(q('nric').value), dob = q('dob');
+  if (!ic) hint(q('nric'), '');
+  else if (ic.length !== 12) hint(q('nric'), `${ic.length} of 12 digits`, true);
+  else hint(q('nric'), (+ic.slice(-1)) % 2 ? 'Male' : 'Female');
+  dob.placeholder = dobFromNric(ic);
+  if (!dob.value) hint(dob, ic.length === 12 ? 'Leave blank to use the date from the NRIC' : '');
+  else if (ic.length === 12 && dob.value !== dobFromNric(ic)) hint(dob, `Doesn't match the NRIC (${dobFromNric(ic)})`, true);
+  else hint(dob, '');
+}
+const isEmpty = c => [...c.querySelectorAll('input[type=text],input[type=number]')].filter(i => i.dataset.k !== 'country').every(i => !i.value)
+  && !c.querySelector('input[type=radio]:checked');
+function updateTotal() {
+  let cards = [...$('nominees').children];
+  const shares = () => cards.map(c => Number(c.querySelector('[data-k="percent"]').value) || 0);
+  let s = shares(), total = s.reduce((a, b) => a + b, 0);
+  // Under 100% and the last nominee has a share: open the next nominee
+  if (total < 100 && s[s.length - 1] > 0 && cards.length < MAX) { addNominee(); cards = [...$('nominees').children]; }
+  // At 100%: remove empty nominee sections at the end
+  if (total >= 100) cards.slice(1).reverse().forEach(c => { if (isEmpty(c)) c.remove(); });
+  cards = [...$('nominees').children]; s = shares();
+  renumber();
+  $('totalText').textContent = `Total ${total}%` + (total > 100 ? ' (over 100%)' : total < 100 && cards.length >= MAX && s.every(x => x > 0) ? ` (the form has room for ${MAX} nominees)` : '');
+  $('totalBar').style.width = Math.min(total, 100) + '%';
+  $('total').classList.toggle('done', total === 100);
+  $('total').classList.toggle('over', total > 100);
+}
+['a1', 'a2', 'a3', 'apc', 'atown'].forEach(id => $(id).addEventListener('input', () => [...$('nominees').children, ...$('trustees').children].forEach(showSameText)));
+
+// ---------- trustees (page 4) & consent (page 5) ----------
+let partSeq = 0;
+const PARTS = { trustees: { tpl: 'trusteeTpl', max: 2, label: 'Trustee', btn: 'addTrustee' }, consents: { tpl: 'consentTpl', max: 4, label: 'Person', btn: 'addConsent' } };
+function addPart(key) {
+  const P = PARTS[key], box = $(key);
+  if (box.children.length >= P.max) return null;
+  const el = $(P.tpl).content.firstElementChild.cloneNode(true), seq = ++partSeq;
+  ['idType', 'gender', 'nat', 'cob', 'telType', 'addrChoice'].forEach(g => el.querySelectorAll(`.${g} input[type=radio]`).forEach(r => { r.name = `p${g}${seq}`; }));
+  el.querySelectorAll('[data-k]').forEach(i => { i.id = `p${seq}-${i.dataset.k}`; });
+  const q = k => el.querySelector(`[data-k="${k}"]`);
+  const others = (g, k) => el.querySelectorAll(`.${g} input[type=radio]`).forEach(r => r.addEventListener('change', () => { q(k).hidden = r.value !== 'OTHERS'; }));
+  if (key === 'trustees') {
+    others('nat', 'natOther'); others('cob', 'cobOther');
+    el.querySelectorAll('.idType input').forEach(r => r.addEventListener('change', () => {
+      el.querySelectorAll('.byNric').forEach(x => { x.hidden = r.value !== 'nric'; });
+      el.querySelectorAll('.byPass').forEach(x => { x.hidden = r.value !== 'passport'; });
+    }));
+    el.querySelectorAll('.addrChoice input').forEach(r => r.addEventListener('change', () => { el.querySelector('.addr').hidden = r.value !== 'new'; showSameText(el); }));
+    q('nric').addEventListener('input', e => {
+      const ic = digits(e.target.value), own = ic && ic === digits($('nric').value);
+      hint(e.target, !ic ? '' : ic.length !== 12 ? `${ic.length} of 12 digits` : own ? "This is the policyholder's NRIC" : `DOB ${dobFromNric(ic)} · ${(+ic.slice(-1)) % 2 ? 'Male' : 'Female'}`, ic && (ic.length !== 12 || own));
+    });
+  }
+  el.querySelector('.remove').addEventListener('click', () => { el.remove(); renumberPart(key); });
+  box.appendChild(el);
+  renumberPart(key);
+  return el;
+}
+function renumberPart(key) {
+  const P = PARTS[key];
+  [...$(key).children].forEach((el, i) => { el.querySelector('.title').textContent = `${P.label} ${i + 1}`; });
+  $(P.btn).hidden = $(key).children.length >= P.max;
+}
+$('addTrustee').addEventListener('click', () => addPart('trustees'));
+$('addConsent').addEventListener('click', () => addPart('consents'));
+
+// Same rules as the Mac app (lib/trustees.js)
+function collectTrustees(c, phAddr, notes) {
+  const pick = (el, g) => (el.querySelector(`.${g} input:checked`) || {}).value;
+  const country = (v, tag, what) => { if (!v) return undefined; if (v === 'MALAYSIAN') return v; if (v.length <= 21) return v; notes.errors.push(`${tag}: ${what} is longer than the 21 boxes. Left blank.`); };
+  const out = [];
+  [...$('trustees').children].forEach((el, i) => {
+    const q = k => el.querySelector(`[data-k="${k}"]`).value.trim(), tag = `Trustee ${i + 1}`, v = {};
+    const nm = up(q('name'));
+    if (/^[A-Z@'.\/ -]{2,84}$/.test(nm)) v.name = nm; else notes.errors.push(`${tag}: name is missing or invalid. Left blank.`);
+    if (pick(el, 'idType') === 'passport') {
+      const p = q('passport').replace(/\s/g, '').toUpperCase();
+      if (/^[A-Z0-9]{5,12}$/.test(p)) v.id = p; else notes.errors.push(`${tag}: passport no. is missing or invalid. Left blank.`);
+      const ex = q('passportExpiry');
+      if (validDate(ex)) v.passportExpiry = ex; else if (ex) notes.errors.push(`${tag}: passport expiry "${ex}" is not a real DD/MM/YYYY date. Left blank.`); else notes.warnings.push(`${tag}: passport expiry not given. Left blank.`);
+      const g = pick(el, 'gender'); if (g) v.gender = g; else notes.warnings.push(`${tag}: gender not chosen. Left blank.`);
+      const dob = q('dob');
+      if (validDate(dob)) v.dob = dob; else if (dob) notes.errors.push(`${tag}: date of birth "${dob}" is not a real DD/MM/YYYY date. Left blank.`); else notes.warnings.push(`${tag}: date of birth not given. Left blank.`);
+    } else {
+      const ic = digits(q('nric'));
+      if (!/^\d{12}$/.test(ic)) notes.errors.push(`${tag}: NRIC is not 12 digits. NRIC, gender and DOB left blank.`);
+      else if (ic === c.nric) { notes.errors.push(`${tag} has the policyholder's NRIC. The policyholder cannot be their own trustee. Trustee left blank.`); return out.push({}); }
+      else { v.id = ic; v.gender = (+ic.slice(-1)) % 2 ? 'M' : 'F'; v.dob = dobFromNric(ic); }
+    }
+    const nat = pick(el, 'nat'), cob = pick(el, 'cob');
+    v.nationality = country(nat === 'OTHERS' ? up(q('natOther')) : nat, tag, 'nationality');
+    v.countryOfBirth = country(cob === 'OTHERS' ? up(q('cobOther')) : cob, tag, 'country of birth');
+    if (!v.nationality) notes.warnings.push(`${tag}: nationality not chosen. Left blank.`);
+    if (!v.countryOfBirth) notes.warnings.push(`${tag}: country of birth not chosen. Left blank.`);
+    const tel = q('tel').replace(/[\s-]/g, '');
+    if (!tel) notes.warnings.push(`${tag}: tel no. not given. Left blank.`);
+    else if (/^01\d{8,9}$/.test(tel)) { v.tel = '6' + tel; v.telCountry = 'MALAYSIA'; }
+    else if (/^\+?[1-9]\d{6,11}$/.test(tel)) { v.tel = tel.replace('+', ''); v.telCountry = up(q('telCountry')).slice(0, 8) || undefined; if (!v.telCountry) notes.warnings.push(`${tag}: tel country not given. Left blank.`); }
+    else notes.errors.push(`${tag}: tel no. "${tel}" is not a valid number (e.g. 0123456789). Left blank.`);
+    if (v.tel) v.telType = pick(el, 'telType') || 'HANDPHONE';
+    const ac = pick(el, 'addrChoice');
+    let addr = null;
+    if (!ac) notes.warnings.push(`${tag}: mailing address not chosen. Left blank.`);
+    else if (ac === 'same') { if (phAddr) addr = phAddr; else notes.errors.push(`${tag}: "Same as policyholder" chosen but the policyholder address is empty. Address left blank.`); }
+    else {
+      const pc = q('pc');
+      if (!/^\d{5}$/.test(pc)) notes.errors.push(`${tag}: postcode "${pc}" is not 5 digits. Address left blank.`);
+      else addr = { lines: [q('l1'), q('l2'), q('l3')].map(up).filter(Boolean), postcode: pc, town: up(q('town')), country: up(q('country')) || 'MALAYSIA' };
+    }
+    if (addr) {
+      const lines = addr.lines.length <= 3 && addr.lines.every(l => l.length <= 32) ? addr.lines : wrapWords(addr.lines.join(' '), 32);
+      if (lines.length > 3) notes.errors.push(`${tag}: address is too long for the 3 lines on the form. Address left blank.`);
+      else v.address = { ...addr, lines, town: addr.town.slice(0, 25), country: addr.country.slice(0, 10) };
+    }
+    out.push(v);
+  });
+  return out;
+}
+function collectConsents(c, notes) {
+  return [...$('consents').children].map((el, i) => {
+    const q = k => el.querySelector(`[data-k="${k}"]`).value.trim(), tag = `Consent ${i + 1}`, v = {};
+    const nm = up(q('name'));
+    if (/^[A-Z@'.\/ -]{2,84}$/.test(nm)) v.name = nm; else notes.errors.push(`${tag}: name is missing or invalid. Left blank.`);
+    const id = q('nric').replace(/[\s-]/g, '').toUpperCase();
+    if (/^\d{12}$/.test(id) || /^[A-Z][A-Z0-9]{4,11}$/.test(id)) v.id = id; else notes.errors.push(`${tag}: NRIC/passport "${q('nric')}" is invalid. Left blank.`);
+    const d = q('date') || c.date;
+    if (validDate(d)) { v.date = d; if (!q('date')) notes.info.push(`${tag}: signature date set to the form date (${d}). Change it if they sign on another day.`); }
+    else notes.errors.push(`${tag}: signature date "${d || ''}" is not a real DD/MM/YYYY date. Left blank.`);
+    return v;
+  });
+}
+const partEmpty = el => [...el.querySelectorAll('input[type=text]')].filter(i => i.dataset.k !== 'country').every(i => !i.value.trim());
+
+// ---------- collect + validate (same rules as the Mac app: flag and leave blank, never guess) ----------
+function collect() {
+  const notes = { errors: [], warnings: [], info: [] };
+  const c = {};
+  const name = up($('name').value);
+  if (/^[A-Z@'.\/ -]{2,}$/.test(name)) c.name = name; else notes.errors.push(`Policyholder name "${$('name').value}" is missing or invalid. Left blank.`);
+  const ic = digits($('nric').value);
+  if (/^\d{12}$/.test(ic)) c.nric = ic; else notes.errors.push(`Policyholder NRIC "${$('nric').value}" is not 12 digits. Left blank.`);
+  const pol = $('policyNo').value.replace(/\s/g, '').toUpperCase();
+  if (/^[A-Z0-9]{6,12}$/.test(pol)) c.policyNo = pol; else notes.errors.push(`Policy No. "${$('policyNo').value}" doesn't look like a policy number. Left blank.`);
+  const m = radio('muslim'); c.muslim = m === 'yes' ? true : m === 'no' ? false : null;
+  c.status = radio('status') || null;
+  const ch = $('children').value;
+  if (ch !== '') { const n = Number(ch); if (Number.isInteger(n) && n >= 0 && n <= 20) c.children = n; else notes.errors.push(`Number of children "${ch}" must be a whole number. Left blank.`); }
+  const dt = $('formDate').value.trim();
+  if (dt) { if (validDate(dt)) c.date = dt; else notes.errors.push(`Date "${dt}" is not a real DD/MM/YYYY date. Left blank.`); }
+  const phLines = [$('a1').value, $('a2').value, $('a3').value].map(up).filter(Boolean);
+  const phAddr = /^\d{5}$/.test($('apc').value) ? { lines: phLines, postcode: $('apc').value, town: up($('atown').value), country: up($('acountry').value) || 'MALAYSIA' } : null;
+
+  c.nominees = [];
+  let total = 0;
+  [...$('nominees').children].filter(el => !isEmpty(el)).forEach((el, i) => {
+    const q = k => el.querySelector(`[data-k="${k}"]`), tag = `Nominee ${i + 1}`, v = {};
+    const nm = up(q('name').value);
+    if (/^[A-Z@'.\/ -]{2,84}$/.test(nm)) v.name = nm; else notes.errors.push(`${tag}: name is missing or invalid. Left blank.`);
+    const nic = digits(q('nric').value);
+    if (/^\d{12}$/.test(nic)) {
+      v.nric = nic; v.gender = (+nic.slice(-1)) % 2 ? 'M' : 'F';
+      const fromIc = dobFromNric(nic), dob = q('dob').value.trim();
+      if (!dob) { v.dob = fromIc; notes.info.push(`${tag}: date of birth taken from NRIC (${fromIc}).`); }
+      else if (dob !== fromIc) notes.errors.push(`${tag}: date of birth ${dob} doesn't match NRIC ${nic}. DOB left blank.`);
+      else v.dob = dob;
+    } else notes.errors.push(`${tag}: NRIC is not 12 digits. NRIC, gender and DOB left blank.`);
+    const nat = (el.querySelector('.nat input:checked') || {}).value;
+    if (nat === 'MALAYSIAN') v.nationality = 'MALAYSIAN';
+    else if (nat === 'OTHERS') { const o = up(q('natOther').value); if (o) v.nationality = o.slice(0, 16); else notes.warnings.push(`${tag}: "Others" nationality not stated. Left blank.`); }
+    const rel = (el.querySelector('.rel input:checked') || {}).value;
+    if (rel === 'OTHERS') { v.relationship = 'OTHERS'; v.relOther = up(q('relOther').value).slice(0, 12); }
+    else if (rel) v.relationship = rel;
+    else notes.warnings.push(`${tag}: relationship not chosen. Left blank.`);
+    const ac = (el.querySelector('.addrChoice input:checked') || {}).value;
+    let addr = null;
+    if (!ac) notes.warnings.push(`${tag}: mailing address not chosen. Left blank.`);
+    else if (ac === 'same') { if (phAddr) addr = phAddr; else notes.errors.push(`${tag}: "Same as policyholder" chosen but the policyholder address is empty. Address left blank.`); }
+    else {
+      const pc = q('pc').value.trim();
+      if (!/^\d{5}$/.test(pc)) notes.errors.push(`${tag}: postcode "${pc}" is not 5 digits. Address left blank.`);
+      else addr = { lines: [q('l1').value, q('l2').value, q('l3').value].map(up).filter(Boolean), postcode: pc, town: up(q('town').value), country: up(q('country').value) || 'MALAYSIA' };
+    }
+    if (addr) {
+      // 3 lines x 32 boxes: keep the client's own line breaks when they fit
+      const lines = addr.lines.length <= 3 && addr.lines.every(l => l.length <= 32) ? addr.lines : wrapWords(addr.lines.join(' '), 32);
+      if (lines.length > 3) notes.errors.push(`${tag}: address is too long for the 3 lines on the form. Address left blank.`);
+      else v.address = { ...addr, lines, town: addr.town.slice(0, 25), country: addr.country.slice(0, 10) };
+    }
+    const p = Number(q('percent').value);
+    if (p > 0 && p <= 100) { v.percent = p; total += p; } else notes.errors.push(`${tag}: share must be between 1 and 100. Left blank.`);
+    c.nominees.push(v);
+  });
+  if (c.nominees.length && Math.abs(total - 100) > 0.001) notes.errors.push(`Nominee shares add up to ${total}%, not 100%. Correct this before submitting.`);
+  c.total = total;
+  [...$('trustees').children, ...$('consents').children].forEach(el => { if (partEmpty(el)) el.remove(); });
+  renumberPart('trustees'); renumberPart('consents');
+  c.trustees = collectTrustees(c, phAddr, notes);
+  c.consents = collectConsents(c, notes);
+  c.agent = { name: up($('agentName').value), code: digits($('agentCode').value) };
+  return { c, notes };
+}
+
+// ---------- fill the PDF ----------
+let formBytes = null;
+async function loadForm() {
+  if (!formBytes) {
+    const r = await fetch('nomination.pdf');
+    if (!r.ok) throw new Error('Could not load the blank nomination form.');
+    formBytes = await r.arrayBuffer();
+  }
+  return formBytes.slice(0);
+}
+async function fillPdf(c) {
+  const { PDFDocument, PDFName, StandardFonts } = PDFLib;
+  const doc = await PDFDocument.load(await loadForm());
+  const form = doc.getForm();
+  const filled = [], blanks = [];
+  const text = (field, value, label, show) => {
+    const f = form.getTextField(field), max = f.getMaxLength();
+    if (!value) return blanks.push(label);
+    if (max && value.length > max) return blanks.push(`${label} (longer than the ${max} boxes, fill by hand)`);
+    f.setText(value); filled.push([label, show || value]);
+  };
+  const set = (field, v) => { if (v !== undefined && v !== null && v !== '') form.getTextField(field).setText(String(v)); };
+  const tick = (field, index) => {
+    const cb = form.getCheckBox(field);
+    const ws = cb.acroField.getWidgets().slice().sort((a, b) => a.getRectangle().x - b.getRectangle().x);
+    const on = ws[index].getOnValue();
+    cb.acroField.dict.set(PDFName.of('V'), on);
+    ws.forEach(w => w.setAppearanceState(w.getOnValue() === on ? on : PDFName.of('Off')));
+  };
+
+  text('Policy No', c.policyNo, 'Policy No.');
+  text('Proposer Name', c.name, '1) Full name as per NRIC');
+  text('Proposer NRIC', c.nric, '2) NRIC (12 digits)');
+  text('Proposer Name2', c.name, 'Name under Proposer signature (page 3)');
+  text('Declaration Date', c.date && c.date.replace(/\//g, ''), 'Date (page 3)', c.date);
+  if (c.muslim === null) blanks.push('3) Are you a Muslim? (not chosen)');
+  else { tick('Proposer Muslim', c.muslim ? 1 : 0); filled.push(['3) Are you a Muslim?', c.muslim ? 'Yes' : 'No']); }
+  const STATUS = ['MARRIED', 'SINGLE', 'DIVORCED', 'WIDOWED'];
+  if (!c.status) blanks.push('4) Status (not chosen)');
+  else { tick('Proposer Status', STATUS.indexOf(c.status)); filled.push(['4) Status', c.status]); }
+  if (c.children === undefined) blanks.push('5) Do you have any children? (not filled)');
+  else if (c.children === 0) { tick('Proposer Children', 0); filled.push(['5) Do you have any children?', 'No']); }
+  else { tick('Proposer Children', 1); set('No. of Children', c.children); filled.push(['5) Do you have any children?', `Yes, ${c.children}`]); }
+
+  c.nominees.forEach((n, i) => {
+    const k = `N${i + 1}`;
+    if (n.name) {
+      const ls = wrapWords(n.name, 28);
+      if (ls.length > 3) blanks.push(`${k} name too long for the boxes (fill by hand)`); else ls.forEach((l, j) => set(`${k} Name${j + 1}`, l));
+    }
+    set(`${k} NRIC`, n.nric);
+    if (n.gender) tick(`${k} Gender`, n.gender === 'M' ? 0 : 1);
+    if (n.dob) { const [d, m, y] = n.dob.split('/'); set(`${k} DOB Day`, d); set(`${k} DOB Month`, m); set(`${k} DOB Year`, y.slice(2)); }
+    if (n.nationality === 'MALAYSIAN') tick(`${k} Nationality`, 0);
+    else if (n.nationality) { tick(`${k} Nationality`, 1); set(`${k} Nationality Others`, n.nationality); }
+    if (n.relationship) { tick(`${k} Relationship`, RELATIONSHIPS.indexOf(n.relationship)); if (n.relOther) set(`${k} Relationship Others`, n.relOther); }
+    if (n.address) {
+      n.address.lines.forEach((l, j) => set(`${k} Mailing${j + 1}`, l));
+      set(`${k} Postcode`, n.address.postcode); set(`${k} Town`, n.address.town); set(`${k} Country`, n.address.country);
+    }
+    set(`${k} percent`, n.percent);
+    filled.push([`Nominee ${i + 1}`, [n.name, n.nric, n.dob, n.gender && (n.gender === 'M' ? 'Male' : 'Female'), n.nationality, n.relOther || n.relationship,
+      n.address && `${n.address.lines.join(', ')}, ${n.address.postcode} ${n.address.town}`, n.percent && `${n.percent}%`].filter(Boolean).join(' · ')]);
+  });
+  if (c.nominees.length) { set('Total %', c.total); set('Total 1', c.total); }
+  else blanks.push('Part 1: no nominee entered');
+
+  text('W1 Name', c.agent.name, 'Witness name (page 3)');
+  text('IAC No 1', c.agent.code.length === 7 ? c.agent.code : '', 'Witness IAC No. (page 3)');
+  let sigImg = null;
+  if (sigDataUrl) {
+    const bytes = Uint8Array.from(atob(sigDataUrl.split(',')[1]), ch => ch.charCodeAt(0));
+    sigImg = sigDataUrl.startsWith('data:image/png') ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
+  }
+  // Witness signature image, scaled into box {x, y, w, h} (points, bottom-left origin)
+  const drawSig = (page, box, label) => {
+    if (!sigImg) return;
+    const s = Math.min(box.w / sigImg.width, box.h / sigImg.height);
+    doc.getPages()[page].drawImage(sigImg, { x: box.x + (box.w - sigImg.width * s) / 2, y: box.y + (box.h - sigImg.height * s) / 2, width: sigImg.width * s, height: sigImg.height * s });
+    filled.push([label, 'inserted']);
+  };
+  drawSig(2, { x: 204, y: 536, w: 106, h: 53 }, 'Witness signature (page 3)');
+
+  // Pages 4–5 name boxes auto-size badly: shrink the text to fit the box
+  const helv = await doc.embedFont(StandardFonts.Helvetica);
+  const fit = (field, v) => {
+    if (!v) return;
+    const f = form.getTextField(field), w = f.acroField.getWidgets()[0].getRectangle().width - 4;
+    f.setText(String(v)); f.setFontSize(Math.min(9, +(w / helv.widthOfTextAtSize(String(v), 1)).toFixed(1)));
+  };
+  const comb = (field, v) => { if (!v) return; const f = form.getTextField(field); f.enableCombing(); f.setText(String(v)); f.setFontSize(10); };
+  const dateBoxes = (d, day, month, year) => { const [dd, mm, yy] = d.split('/'); set(day, dd); set(month, mm); set(year, yy.slice(2)); };
+  // Passport expiry: the form prints Day | _ | Month | _ | Year | _ — write DD, MM, YY in the empty boxes
+  const expiry = (field, d) => {
+    const r = form.getTextField(field).acroField.getWidgets()[0].getRectangle(), [dd, mm, yyyy] = d.split('/');
+    [[dd, 33], [mm, 81.5], [yyyy.slice(2), 113]].forEach(([t, dx]) =>
+      doc.getPages()[3].drawText(t, { x: r.x + dx + (16 - helv.widthOfTextAtSize(t, 9)) / 2, y: r.y + 4, size: 9, font: helv }));
+  };
+
+  // Part 2: trustees (page 4)
+  c.trustees.forEach((t, i) => {
+    const k = `T${i + 1}`;
+    if (t.name) {
+      const ls = wrapWords(t.name, 28);
+      if (ls.length > 3) blanks.push(`Trustee ${i + 1} name too long for the boxes (fill by hand)`); else ls.forEach((l, j) => set(`${k} Name${j + 1}`, l));
+      fit(`${k} Name`, t.name);
+    }
+    set(`${k} NRIC`, t.id);
+    if (t.passportExpiry) expiry(`${k} Passport`, t.passportExpiry);
+    if (t.gender) tick(`${k} Gender`, t.gender === 'M' ? 0 : 1);
+    if (t.dob) dateBoxes(t.dob, `${k} DOB Day`, `${k} DOB Month`, `${k} DOB Year`);
+    if (t.nationality === 'MALAYSIAN') tick(`${k} Nationality`, 0);
+    else if (t.nationality) { tick(`${k} Nationality`, 1); set(`${k} Nationality Others`, t.nationality); }
+    if (t.countryOfBirth === 'MALAYSIAN') tick(`${k} Country of Birth`, 0);
+    else if (t.countryOfBirth) { tick(`${k} Country of Birth`, 1); set(`${k} Country of Birth Others`, t.countryOfBirth); }
+    if (t.tel) { set(`${k} Tel No`, t.tel); set(`${k} Tel Country`, t.telCountry); tick(`${k} Tels`, ['HOUSE', 'HANDPHONE', 'OFFICE'].indexOf(t.telType)); }
+    if (t.address) {
+      t.address.lines.forEach((l, j) => set(`${k} Mailing${j + 1}`, l));
+      set(`${k} Postcode`, t.address.postcode); set(`${k} Town`, t.address.town); set(`${k} Country`, t.address.country);
+    }
+    filled.push([`Trustee ${i + 1} (page 4)`, [t.name, t.id, t.passportExpiry && `passport exp ${t.passportExpiry}`, t.dob, t.gender && (t.gender === 'M' ? 'Male' : 'Female'), t.nationality,
+      t.countryOfBirth && `born ${t.countryOfBirth === 'MALAYSIAN' ? 'MALAYSIA' : t.countryOfBirth}`, t.tel && `+${t.tel} (${t.telType.toLowerCase()})`, t.address && `${t.address.lines.join(', ')}, ${t.address.postcode} ${t.address.town}`].filter(Boolean).join(' · ')]);
+  });
+  if (c.trustees.length) {
+    if (c.date) { dateBoxes(c.date, 'Day2', 'Month2', 'Year2'); filled.push(['Date (page 4)', c.date]); } else blanks.push('Date (page 4)');
+    if (c.agent.name) { fit('W2 Name', c.agent.name); filled.push(['Witness name (page 4)', c.agent.name]); } else blanks.push('Witness name (page 4)');
+    text('IAC No 2', c.agent.code.length === 7 ? c.agent.code : '', 'Witness IAC No. (page 4)');
+    drawSig(3, { x: 440, y: 111, w: 105, h: 36 }, 'Witness signature (page 4)');
+  }
+
+  // Part 3: consent of existing nominees/trustees (page 5), each witnessed by the agent
+  const COLS = [126, 236, 345, 454];
+  c.consents.forEach((s, i) => {
+    const n = i + 1;
+    fit(`Page 5 Consent${n}`, s.name);
+    set(`Page 5 Consent1 NRIC${n}`, s.id);
+    if (s.date) dateBoxes(s.date, `Day${n + 2}`, `Month${n + 2}`, `Year${n + 2}`);
+    fit(`Page 5 Witness ${n}`, c.agent.name);
+    if (c.agent.code.length === 7) comb(`Page 5 Witness IAC ${n}`, c.agent.code);
+    filled.push([`Consent ${n} (page 5)`, [s.name, s.id, s.date && `signs ${s.date}`, c.agent.name && `witness ${c.agent.name}`].filter(Boolean).join(' · ')]);
+    drawSig(4, { x: COLS[i] + 12, y: 304, w: 90, h: 34 }, `Witness signature (page 5, consent ${n})`);
+  });
+
+  const manual = [
+    'Nominee passport details, if any.',
+    ...(c.muslim === false && !c.trustees.length && c.nominees.some(n => ['HUSBAND', 'WIFE', 'SON', 'DAUGHTER', 'FATHER', 'MOTHER'].includes(n.relationship))
+      ? ['Client is Non-Muslim and a nominee is a spouse, child or parent: the policy becomes a trust policy (form note 2). Consider Part 2 (trustees).'] : []),
+    "The client's and witness's signatures." + (sigDataUrl ? '' : ' The Witness Details box can be skipped when the witness is the agent.'),
+    ...(c.trustees.length ? ['Page 4: signatures of the policyholder and each trustee (trustees sign to accept).'] : []),
+    ...(c.consents.length ? ['Page 5: each consenting nominee/trustee signs in their column. The Witness Details boxes on page 5 are skipped because the witness is an agent.'] : []),
+    ...(sigDataUrl ? ['Witness signature is pre-printed. Use this copy only when the client signs in front of you, and check with Customer Service that a printed signature is accepted.'] : []),
+  ];
+  return { bytes: await doc.save(), filled, blanks, manual };
+}
+
+// ---------- preview (pdf.js, pages 1–5; page 6 is blank) ----------
+async function preview(bytes) {
+  const box = $('pages'); box.textContent = 'Drawing preview…';
+  try {
+    const pdf = await pdfjsLib.getDocument({ data: bytes.slice(0) }).promise;
+    box.textContent = '';
+    for (let p = 1; p <= Math.min(5, pdf.numPages); p++) {
+      const page = await pdf.getPage(p), vp = page.getViewport({ scale: 1.6 });
+      const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
+      cv.setAttribute('aria-label', `Page ${p} preview`);
+      box.appendChild(cv);
+      await page.render({ canvasContext: cv.getContext('2d'), viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+    }
+  } catch (e) { box.textContent = 'Preview unavailable here. The downloaded PDF is not affected.'; }
+}
+
+// ---------- actions ----------
+$('make').addEventListener('click', async () => {
+  $('make').disabled = true; $('makeStatus').textContent = 'Filling the form…';
+  try {
+    const { c, notes } = collect();
+    const r = await fillPdf(c);
+    lastPdf = r.bytes; lastMeta = { c, notes, r };
+    const issues = notes.errors.length + r.blanks.length;
+    $('review').innerHTML =
+      r.filled.map(([k, v]) => `<li class="ok">✓ ${esc(k)}: <b>${esc(v)}</b></li>`).join('')
+      + notes.errors.map(e => `<li class="bad">✗ ${esc(e)}</li>`).join('')
+      + r.blanks.map(b => `<li class="bad">! Left blank: ${esc(b)}</li>`).join('')
+      + [...notes.warnings, ...notes.info].map(w => `<li class="warn">• ${esc(w)}</li>`).join('')
+      + `<li class="muted" style="margin-top:8px"><b>Still to do by hand:</b></li>` + r.manual.map(m => `<li class="muted">– ${esc(m)}</li>`).join('');
+    $('acceptRow').hidden = !issues; $('accept').checked = false;
+    $('download').disabled = !!issues;
+    $('dlMsg').textContent = '';
+    $('resultBox').hidden = false;
+    $('makeStatus').textContent = issues ? `${issues} item(s) to check below.` : 'Ready. Check the preview, then download.';
+    $('resultBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    preview(r.bytes);
+    if ($('sigRemember').checked) store.set('nff-agent', { name: $('agentName').value, code: $('agentCode').value, sig: sigDataUrl });
+  } catch (e) { $('makeStatus').textContent = 'Something went wrong: ' + e.message; }
+  $('make').disabled = false;
+});
+$('accept').addEventListener('change', () => { $('download').disabled = !$('accept').checked; });
+
+let downloads = null;
+$('download').addEventListener('click', async () => {
+  if (!lastPdf) return;
+  const c = lastMeta.c, d = (c.date || today()).split('/').reverse().join('');
+  const filename = `Nomination_${(c.nric || 'XXXX').slice(-4)}_${d}.pdf`;
+  const blob = new Blob([lastPdf], { type: 'application/pdf' });
+  if (!downloads && window.claude) { $('dlMsg').textContent = 'Downloads are not available in this view. Open the link in claude.ai.'; return; }
+  try {
+    if (downloads) await downloads.save({ filename, data: blob });
+    else {
+      // Ordinary web page (e.g. GitHub Pages): normal browser download
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    }
+    $('dlMsg').innerHTML = `<span class="ok">Saved ${esc(filename)}. Print it, get it signed, and submit as usual.</span>`;
+    const h = store.get('nff-history') || [];
+    h.unshift({ at: new Date().toLocaleString('en-GB'), ic4: (c.nric || '----').slice(-4), nominees: c.nominees.length, blanks: lastMeta.r.blanks.length + lastMeta.notes.errors.length });
+    store.set('nff-history', h.slice(0, 20)); showHistory();
+  } catch (e) {
+    $('dlMsg').textContent = e && e.code === 'declined' ? 'Download cancelled.' : e && e.code === 'rate_limited' ? 'A download prompt is already open.' : 'Download not available here.';
+  }
+});
+
+// ---------- signature ----------
+$('sigFile').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { sigDataUrl = r.result; showSig(); };
+  r.readAsDataURL(f);
+});
+$('sigClear').addEventListener('click', () => { sigDataUrl = null; $('sigFile').value = ''; showSig(); const a = store.get('nff-agent'); if (a) store.set('nff-agent', { ...a, sig: null }); });
+$('sigRemember').addEventListener('change', e => { if (!e.target.checked) store.del('nff-agent'); });
+function showSig() { $('sigPreview').hidden = !sigDataUrl; $('sigClear').hidden = !sigDataUrl; if (sigDataUrl) $('sigPreview').src = sigDataUrl; }
+
+function showHistory() {
+  const h = store.get('nff-history') || [];
+  $('history').innerHTML = h.length ? h.map(x => `<li class="muted">${esc(x.at)} · client IC …${esc(x.ic4)} · ${x.nominees} nominee(s)${x.blanks ? ` · ${x.blanks} item(s) left for hand-filling` : ''}</li>`).join('') : '<li class="muted">No forms downloaded on this device yet.</li>';
+}
+
+// ---------- example data (clearly fictional) ----------
+$('example').addEventListener('click', () => {
+  const s = (id, v) => { $(id).value = v; $(id).dispatchEvent(new Event('input')); };
+  s('policyNo', '1000000001'); s('name', 'EXAMPLE CLIENT NAME'); s('nric', '800101075120'); setRadio('muslim', 'no'); setRadio('status', 'MARRIED'); s('children', '1');
+  $('addrBox').open = true; s('a1', '1 JALAN CONTOH'); s('a2', 'TAMAN CONTOH'); s('apc', '10000'); s('atown', 'GEORGE TOWN');
+  $('nominees').innerHTML = ''; nomSeq = 0;
+  const el = addNominee(), q = k => el.querySelector(`[data-k="${k}"]`);
+  q('name').value = 'EXAMPLE SPOUSE NAME'; q('nric').value = '820202075122'; checkNominee(el);
+  el.querySelector('.nat input[value=MALAYSIAN]').checked = true; el.querySelector('.rel input[value=WIFE]').checked = true;
+  el.querySelector('.addrChoice input[value=same]').checked = true; showSameText(el);
+  q('percent').value = '100'; updateTotal();
+  $('makeStatus').textContent = 'Example data loaded. These are not real people.';
+});
+
+// ---------- start ----------
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+$('formDate').value = today();
+const saved = store.get('nff-agent');
+$('agentName').value = (saved && saved.name) || DEFAULT_AGENT.name;
+$('agentCode').value = (saved && saved.code) || DEFAULT_AGENT.code;
+if (saved) { $('sigRemember').checked = true; if (saved.sig) { sigDataUrl = saved.sig; showSig(); } }
+addNominee(); showHistory();
+(async () => { try { downloads = window.claude && await window.claude.use('downloads'); } catch { downloads = null; } })();
+</script>
