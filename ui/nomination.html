@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nomination Form Filler</title>
+<style>
+:root {
+  --bg: #f5f5f7; --card: #fff; --ink: #1d1d1f; --muted: #6e6e73; --line: #d2d2d7;
+  --accent: #0a66c2; --accent-ink: #fff; --ok: #1a7f37; --warn: #9a6700; --bad: #c62828; --field: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1c1c1e; --card: #2c2c2e; --ink: #f5f5f7; --muted: #a1a1a6; --line: #3a3a3c;
+    --accent: #4c9aff; --accent-ink: #0b0b0b; --ok: #4ac26b; --warn: #d4a72c; --bad: #ff6b6b; --field: #1c1c1e; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; }
+header { padding: 20px 24px 8px; max-width: 1080px; margin: 0 auto; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+h1 { font-size: 22px; margin: 0; }
+header p { margin: 0; color: var(--muted); font-size: 13px; }
+main { max-width: 1080px; margin: 0 auto; padding: 8px 24px 48px; }
+section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin: 14px 0; }
+h2 { font-size: 16px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+h2 .step { background: var(--accent); color: var(--accent-ink); border-radius: 50%; width: 22px; height: 22px; display: inline-grid; place-items: center; font-size: 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px 16px; }
+label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+input[type=text], input[type=number], select { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); color: var(--ink); font: inherit; text-transform: uppercase; }
+input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+input.invalid { border-color: var(--bad); }
+.hint { font-size: 12px; color: var(--muted); margin-top: 3px; min-height: 16px; }
+.hint.bad { color: var(--bad); }
+.choices { display: flex; flex-wrap: wrap; gap: 6px; }
+.choices label { margin: 0; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink); font-size: 14px; cursor: pointer; }
+.choices input { margin: 0; }
+.choices label:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.drop { border: 2px dashed var(--line); border-radius: 10px; padding: 18px; text-align: center; color: var(--muted); cursor: pointer; }
+.drop.over { border-color: var(--accent); color: var(--accent); }
+button { font: inherit; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.nominee { border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-top: 12px; }
+.nominee h3 { margin: 0 0 10px; font-size: 14px; display: flex; justify-content: space-between; }
+.nominee h3 button { padding: 2px 10px; font-size: 12px; }
+.total { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-weight: 600; }
+.bar { flex: 1; height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .2s; }
+.total.done .bar i { background: var(--ok); } .total.over .bar i { background: var(--bad); }
+.notes { list-style: none; padding: 0; margin: 8px 0 0; font-size: 13px; }
+.notes li { padding: 3px 0; }
+.ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); } .muted { color: var(--muted); }
+.result { display: grid; grid-template-columns: minmax(300px, 1fr) 1.3fr; gap: 16px; }
+@media (max-width: 860px) { .result { grid-template-columns: 1fr; } }
+iframe { width: 100%; height: 720px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.hidden { display: none; }
+.banner { padding: 10px 12px; border-radius: 8px; margin-top: 10px; font-size: 14px; }
+.banner.ok { background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.banner.bad { background: color-mix(in srgb, var(--bad) 14%, transparent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Nomination Form Filler</h1>
+  <p>NBZ-FNOMI-V07-082025 · runs on this Mac only · <a href="#" id="reset">New client</a></p>
+</header>
+<main>
+  <section>
+    <h2><span class="step">1</span>Load from ePartner screenshots <span class="muted" style="font-weight:400;font-size:13px">(optional)</span></h2>
+    <div class="drop" id="drop">Drop policy enquiry screenshots here, or click to choose<br><small>Include the page top (P/N), Insured table and Payer Details</small></div>
+    <input type="file" id="files" accept="image/*" multiple class="hidden">
+    <ul class="notes" id="extractNotes"></ul>
+  </section>
+
+  <section>
+    <h2><span class="step">2</span>Policy &amp; policyholder</h2>
+    <div class="grid">
+      <div><label>Policy No.</label><input type="text" id="policyNo" maxlength="12"><div class="hint" id="policyNoHint"></div></div>
+      <div><label>Full name as per NRIC</label><input type="text" id="name"><div class="hint"></div></div>
+      <div><label>NRIC (12 digits)</label><input type="text" id="nric" maxlength="14"><div class="hint" id="nricHint"></div></div>
+    </div>
+    <div class="grid" style="margin-top:12px">
+      <div><label>Are you a Muslim?</label><div class="choices">
+        <label><input type="radio" name="muslim" value="no">No</label><label><input type="radio" name="muslim" value="yes">Yes</label></div></div>
+      <div><label>Status</label><div class="choices">
+        <label><input type="radio" name="status" value="MARRIED">Married</label><label><input type="radio" name="status" value="SINGLE">Single</label>
+        <label><input type="radio" name="status" value="DIVORCED">Divorced</label><label><input type="radio" name="status" value="WIDOWED">Widowed</label></div></div>
+      <div><label>Number of children (0 = none)</label><input type="number" id="children" min="0" max="20"><div class="hint"></div></div>
+    </div>
+    <details style="margin-top:12px" id="addrBox"><summary class="muted">Policyholder address (used for "same as policyholder")</summary>
+      <div class="grid" style="margin-top:10px">
+        <div><label>Address line 1</label><input type="text" id="a1"></div>
+        <div><label>Address line 2</label><input type="text" id="a2"></div>
+        <div><label>Address line 3</label><input type="text" id="a3"></div>
+        <div><label>Postcode</label><input type="text" id="apc" maxlength="5"></div>
+        <div><label>Town</label><input type="text" id="atown"></div>
+        <div><label>Country</label><input type="text" id="acountry" value="MALAYSIA"></div>
+      </div></details>
+  </section>
+
+  <section>
+    <h2><span class="step">3</span>Nominees</h2>
+    <div class="muted" style="font-size:13px">Shares must total 100%. A new nominee section opens automatically while the total is under 100% (up to 4, as on the form).</div>
+    <div id="nominees"></div>
+    <div class="total" id="total"><span id="totalText">Total 0%</span><div class="bar"><i id="totalBar"></i></div></div>
+  </section>
+
+  <section>
+    <h2>Trustees <span class="muted" style="font-weight:400;font-size:13px">(optional · Part 2, page 4)</span></h2>
+    <div class="muted" style="font-size:13px">Up to 2. The policyholder cannot be their own trustee. You are printed as witness.</div>
+    <div id="trustees"></div>
+    <button type="button" id="addTrustee" style="margin-top:10px">+ Add trustee</button>
+  </section>
+
+  <section>
+    <h2>Consent of existing nominees/trustees <span class="muted" style="font-weight:400;font-size:13px">(optional · Part 3, page 5)</span></h2>
+    <div class="muted" style="font-size:13px">Only when revoking nominees of an existing trust nomination. Up to 4. You are printed as witness in each column.</div>
+    <div id="consents"></div>
+    <button type="button" id="addConsent" style="margin-top:10px">+ Add person</button>
+  </section>
+
+  <section>
+    <h2><span class="step">4</span>Date &amp; witness</h2>
+    <div class="grid" style="margin-bottom:12px">
+      <div><label>Date (DD/MM/YYYY), printed in the Date boxes on page 3</label><input type="text" id="formDate" maxlength="10"><div class="hint" id="dateHint">Set to today. Change it if the client signs on another day.</div></div>
+    </div>
+    <div id="agentInfo" class="muted">Loading…</div>
+    <label class="row" style="margin-top:8px;color:var(--ink);font-size:14px"><input type="checkbox" id="useSig" checked> Insert my signature in the witness box</label>
+    <div class="hint">Use a pre-signed copy only when the client signs in front of you.</div>
+  </section>
+
+  <div class="row"><button class="primary" id="make">Create draft PDF</button><span class="muted" id="makeStatus"></span></div>
+
+  <section id="resultBox" class="hidden">
+    <h2><span class="step">5</span>Review &amp; approve</h2>
+    <div class="result">
+      <div>
+        <ul class="notes" id="review"></ul>
+        <div id="approveBox" style="margin-top:14px">
+          <label class="row hidden" id="acceptRow" style="color:var(--ink);font-size:14px"><input type="checkbox" id="accept"> I'll fill the blank / flagged fields by hand</label>
+          <div class="row" style="margin-top:8px"><button class="primary" id="approve">Approve</button><a id="openPdf" target="_blank">Open PDF</a><span class="muted" style="font-size:12px">(if the preview is blank)</span></div>
+          <div id="approveMsg"></div>
+        </div>
+      </div>
+      <iframe id="preview" title="Draft preview"></iframe>
+    </div>
+  </section>
+</main>
+
+<template id="nomTpl">
+  <div class="nominee">
+    <h3><span class="title">Nominee</span><button type="button" class="remove">Remove</button></h3>
+    <div class="grid">
+      <div><label>Full name as per NRIC</label><input type="text" data-k="name"><div class="hint"></div></div>
+      <div><label>NRIC (12 digits)</label><input type="text" data-k="nric" maxlength="14"><div class="hint"></div></div>
+      <div><label>Date of birth DD/MM/YYYY</label><input type="text" data-k="dob" maxlength="10"><div class="hint"></div></div>
+      <div><label>Share %</label><input type="number" data-k="percent" min="1" max="100"><div class="hint"></div></div>
+    </div>
+    <div style="margin-top:12px"><label>Nationality</label><div class="choices nat">
+        <label><input type="radio" value="MALAYSIAN">Malaysian</label><label><input type="radio" value="OTHERS">Others</label>
+        <input type="text" data-k="natOther" class="hidden" placeholder="Please state" maxlength="16" style="width:180px"></div></div>
+    <div style="margin-top:12px"><label>Relationship to policyholder</label><div class="choices rel">
+        <label><input type="radio" value="HUSBAND">Husband</label><label><input type="radio" value="WIFE">Wife</label>
+        <label><input type="radio" value="SON">Son</label><label><input type="radio" value="DAUGHTER">Daughter</label>
+        <label><input type="radio" value="FATHER">Father</label><label><input type="radio" value="MOTHER">Mother</label>
+        <label><input type="radio" value="BROTHER">Brother</label><label><input type="radio" value="SISTER">Sister</label>
+        <label><input type="radio" value="OTHERS">Others</label>
+        <input type="text" data-k="relOther" class="hidden" placeholder="Please state" maxlength="12" style="width:160px"></div></div>
+    <div style="margin-top:12px"><label>Mailing address</label><div class="choices addrChoice">
+        <label><input type="radio" value="same">Same as policyholder</label><label><input type="radio" value="new">Different address</label></div>
+        <div class="hint sameText"></div></div>
+    <div class="grid addr hidden" style="margin-top:10px">
+      <div><label>Address line 1</label><input type="text" data-k="l1"></div>
+      <div><label>Address line 2</label><input type="text" data-k="l2"></div>
+      <div><label>Address line 3</label><input type="text" data-k="l3"></div>
+      <div><label>Postcode</label><input type="text" data-k="pc" maxlength="5"></div>
+      <div><label>Town</label><input type="text" data-k="town"></div>
+      <div><label>Country</label><input type="text" data-k="country" value="MALAYSIA"></div>
+    </div>
+  </div>
+</template>
+
+<template id="trusteeTpl">
+  <div class="nominee">
+    <h3><span class="title">Trustee</span><button type="button" class="remove">Remove</button></h3>
+    <div class="grid">
+      <div><label>Full name as per NRIC/passport</label><input type="text" data-k="name"><div class="hint"></div></div>
+      <div><label>ID</label><div class="choices idType"><label><input type="radio" value="nric" checked>NRIC</label><label><input type="radio" value="passport">Passport</label></div></div>
+      <div class="byNric"><label>NRIC (12 digits)</label><input type="text" data-k="nric" maxlength="14"><div class="hint"></div></div>
+      <div class="byPass hidden"><label>Passport no.</label><input type="text" data-k="passport" maxlength="12"><div class="hint"></div></div>
+      <div class="byPass hidden"><label>Passport expiry DD/MM/YYYY</label><input type="text" data-k="passportExpiry" maxlength="10"><div class="hint"></div></div>
+      <div class="byPass hidden"><label>Date of birth DD/MM/YYYY</label><input type="text" data-k="dob" maxlength="10"><div class="hint"></div></div>
+    </div>
+    <div class="byPass hidden" style="margin-top:12px"><label>Gender</label><div class="choices gender"><label><input type="radio" value="M">Male</label><label><input type="radio" value="F">Female</label></div></div>
+    <div style="margin-top:12px"><label>Nationality</label><div class="choices nat">
+        <label><input type="radio" value="MALAYSIAN">Malaysian</label><label><input type="radio" value="OTHERS">Others</label>
+        <input type="text" data-k="natOther" class="hidden" placeholder="Please state" maxlength="21" style="width:180px"></div></div>
+    <div style="margin-top:12px"><label>Country of birth</label><div class="choices cob">
+        <label><input type="radio" value="MALAYSIAN">Malaysia</label><label><input type="radio" value="OTHERS">Others</label>
+        <input type="text" data-k="cobOther" class="hidden" placeholder="Please state" maxlength="21" style="width:180px"></div></div>
+    <div class="grid" style="margin-top:12px">
+      <div><label>Tel no. (e.g. 0123456789)</label><input type="text" data-k="tel" maxlength="15"><div class="hint">Malaysian numbers are written as +60…</div></div>
+      <div><label>Tel country (only if not Malaysia)</label><input type="text" data-k="telCountry" maxlength="8"></div>
+    </div>
+    <div style="margin-top:8px"><div class="choices telType"><label><input type="radio" value="HOUSE">House</label><label><input type="radio" value="HANDPHONE" checked>Handphone</label><label><input type="radio" value="OFFICE">Office</label></div></div>
+    <div style="margin-top:12px"><label>Mailing address</label><div class="choices addrChoice">
+        <label><input type="radio" value="same">Same as policyholder</label><label><input type="radio" value="new">Different address</label></div>
+        <div class="hint sameText"></div></div>
+    <div class="grid addr hidden" style="margin-top:10px">
+      <div><label>Address line 1</label><input type="text" data-k="l1"></div>
+      <div><label>Address line 2</label><input type="text" data-k="l2"></div>
+      <div><label>Address line 3</label><input type="text" data-k="l3"></div>
+      <div><label>Postcode</label><input type="text" data-k="pc" maxlength="5"></div>
+      <div><label>Town</label><input type="text" data-k="town"></div>
+      <div><label>Country</label><input type="text" data-k="country" value="MALAYSIA"></div>
+    </div>
+  </div>
+</template>
+
+<template id="consentTpl">
+  <div class="nominee">
+    <h3><span class="title">Person</span><button type="button" class="remove">Remove</button></h3>
+    <div class="grid">
+      <div><label>Full name as per NRIC/passport</label><input type="text" data-k="name"></div>
+      <div><label>NRIC / passport no.</label><input type="text" data-k="nric" maxlength="14"></div>
+      <div><label>Signature date DD/MM/YYYY</label><input type="text" data-k="date" maxlength="10"><div class="hint">Leave blank to use the form date</div></div>
+    </div>
+  </div>
+</template>
+
+<script>
+const $ = id => document.getElementById(id);
+const MAX = 4;
+let current = null;
+
+// ---------- helpers ----------
+const digits = s => (s || '').replace(/\D/g, '');
+function dobFromNric(ic) {
+  if (!/^\d{12}$/.test(ic)) return '';
+  const yy = +ic.slice(0, 2), nowYY = new Date().getFullYear() % 100;
+  return `${ic.slice(4, 6)}/${ic.slice(2, 4)}/${yy <= nowYY ? 2000 + yy : 1900 + yy}`;
+}
+function hint(input, msg, bad) {
+  const h = input.parentElement.querySelector('.hint');
+  if (h) { h.textContent = msg || ''; h.classList.toggle('bad', !!bad); }
+  input.classList.toggle('invalid', !!bad);
+}
+const radio = name => (document.querySelector(`input[name="${name}"]:checked`) || {}).value || '';
+const setRadio = (name, v) => document.querySelectorAll(`input[name="${name}"]`).forEach(r => r.checked = r.value === v);
+
+// ---------- policyholder checks ----------
+$('nric').addEventListener('input', e => {
+  const ic = digits(e.target.value);
+  if (!ic) return hint(e.target, '');
+  if (ic.length !== 12) return hint(e.target, `${ic.length}/12 digits`, true);
+  hint(e.target, `DOB ${dobFromNric(ic)} · ${(+ic.slice(-1)) % 2 ? 'Male' : 'Female'}`);
+});
+$('policyNo').addEventListener('input', e => {
+  const v = e.target.value.trim();
+  hint(e.target, v && !/^[A-Z0-9]{6,12}$/i.test(v) ? '6–12 letters/digits' : '', v && !/^[A-Z0-9]{6,12}$/i.test(v));
+});
+
+// ---------- nominees ----------
+let nomSeq = 0;
+function addNominee() {
+  const box = $('nominees');
+  if (box.children.length >= MAX) return;
+  const el = $('nomTpl').content.firstElementChild.cloneNode(true);
+  const seq = ++nomSeq;
+  ['nat', 'rel', 'addrChoice'].forEach(g => el.querySelectorAll(`.${g} input[type=radio]`).forEach(r => r.name = `${g}${seq}`));
+  const q = k => el.querySelector(`[data-k="${k}"]`);
+  q('nric').addEventListener('input', () => checkNominee(el));
+  q('dob').addEventListener('input', () => checkNominee(el));
+  q('percent').addEventListener('input', () => { checkNominee(el); updateTotal(); });
+  el.querySelectorAll('.addrChoice input').forEach(r => r.addEventListener('change', () => {
+    el.querySelector('.addr').classList.toggle('hidden', r.value !== 'new');
+    showSameText(el);
+  }));
+  el.querySelectorAll('.rel input').forEach(r => r.addEventListener('change', () => q('relOther').classList.toggle('hidden', r.value !== 'OTHERS')));
+  el.querySelectorAll('.nat input[type=radio]').forEach(r => r.addEventListener('change', () => q('natOther').classList.toggle('hidden', r.value !== 'OTHERS')));
+  el.querySelector('.remove').addEventListener('click', () => { el.remove(); renumber(); updateTotal(); });
+  box.appendChild(el);
+  renumber();
+}
+// Show which address "same as policyholder" will use, or warn if there isn't one
+function phAddress() {
+  const lines = [$('a1').value, $('a2').value, $('a3').value].filter(Boolean);
+  return /^\d{5}$/.test($('apc').value) ? [...lines, `${$('apc').value} ${$('atown').value}`].join(', ') : '';
+}
+function showSameText(el) {
+  const same = el.querySelector('.addrChoice input[value=same]').checked, h = el.querySelector('.sameText'), a = phAddress();
+  h.textContent = same ? (a ? `Will use: ${a}` : 'Policyholder address is empty — fill it in step 2 or choose "Different address".') : '';
+  h.classList.toggle('bad', same && !a);
+}
+function renumber() {
+  [...$('nominees').children].forEach((el, i) => {
+    el.querySelector('.title').textContent = `Nominee ${i + 1}`;
+    el.querySelector('.remove').classList.toggle('hidden', $('nominees').children.length === 1);
+  });
+}
+function checkNominee(el) {
+  const q = k => el.querySelector(`[data-k="${k}"]`);
+  const ic = digits(q('nric').value), dob = q('dob');
+  if (!ic) hint(q('nric'), '');
+  else if (ic.length !== 12) hint(q('nric'), `${ic.length}/12 digits`, true);
+  else hint(q('nric'), `${(+ic.slice(-1)) % 2 ? 'Male' : 'Female'}`);
+  dob.placeholder = dobFromNric(ic);
+  if (!dob.value) hint(dob, ic.length === 12 ? 'Leave blank to use the date from the NRIC' : '');
+  else if (ic.length === 12 && dob.value !== dobFromNric(ic)) hint(dob, `Doesn't match NRIC (${dobFromNric(ic)})`, true);
+  else hint(dob, '');
+}
+function updateTotal() {
+  const cards = [...$('nominees').children];
+  const shares = cards.map(c => Number(c.querySelector('[data-k="percent"]').value) || 0);
+  const total = shares.reduce((a, b) => a + b, 0);
+  $('totalText').textContent = `Total ${total}%`;
+  $('totalBar').style.width = Math.min(total, 100) + '%';
+  $('total').classList.toggle('done', total === 100);
+  $('total').classList.toggle('over', total > 100);
+  // Under 100% and the last nominee has a share: open the next section automatically
+  if (total < 100 && shares[shares.length - 1] > 0 && cards.length < MAX) addNominee();
+  // Reached 100%: drop trailing empty sections
+  if (total >= 100) cards.slice(1).reverse().forEach(c => { if (isEmpty(c)) c.remove(); });
+  renumber();
+  if (total > 100) $('totalText').textContent += ' — over 100%';
+  else if (total < 100 && cards.length >= MAX && shares.every(s => s > 0)) $('totalText').textContent += ` — form only has ${MAX} nominee sections`;
+}
+const isEmpty = c => [...c.querySelectorAll('input[type=text],input[type=number]')].filter(i => i.dataset.k !== 'country').every(i => !i.value);
+
+function collectNominees() {
+  return [...$('nominees').children].filter(c => !isEmpty(c)).map(c => {
+    const q = k => c.querySelector(`[data-k="${k}"]`);
+    const nat = (c.querySelector('.nat input:checked') || {}).value;
+    const rel = (c.querySelector('.rel input:checked') || {}).value;
+    const addr = (c.querySelector('.addrChoice input:checked') || {}).value;
+    return {
+      name: q('name').value, nric: digits(q('nric').value), dob: q('dob').value || undefined,
+      nationality: nat === 'OTHERS' ? q('natOther').value : nat || undefined,
+      relationship: rel === 'OTHERS' ? (q('relOther').value || 'OTHERS') : rel || undefined,
+      address: !addr ? undefined : addr === 'same' ? 'same' : { lines: [q('l1').value, q('l2').value, q('l3').value].filter(Boolean), postcode: q('pc').value, town: q('town').value, country: q('country').value },
+      percent: Number(q('percent').value) || undefined,
+    };
+  });
+}
+
+// ---------- trustees (page 4) & consent (page 5) ----------
+let partSeq = 0;
+function addPart(boxId, tplId, max, label) {
+  const box = $(boxId);
+  if (box.children.length >= max) return;
+  const el = $(tplId).content.firstElementChild.cloneNode(true), seq = ++partSeq;
+  ['idType', 'gender', 'nat', 'cob', 'telType', 'addrChoice'].forEach(g => el.querySelectorAll(`.${g} input[type=radio]`).forEach(r => r.name = `p${g}${seq}`));
+  const q = k => el.querySelector(`[data-k="${k}"]`);
+  const others = (g, k) => el.querySelectorAll(`.${g} input[type=radio]`).forEach(r => r.addEventListener('change', () => q(k).classList.toggle('hidden', r.value !== 'OTHERS')));
+  if (q('natOther')) { others('nat', 'natOther'); others('cob', 'cobOther'); }
+  el.querySelectorAll('.idType input').forEach(r => r.addEventListener('change', () => {
+    el.querySelectorAll('.byNric').forEach(x => x.classList.toggle('hidden', r.value !== 'nric'));
+    el.querySelectorAll('.byPass').forEach(x => x.classList.toggle('hidden', r.value !== 'passport'));
+  }));
+  el.querySelectorAll('.addrChoice input').forEach(r => r.addEventListener('change', () => { el.querySelector('.addr').classList.toggle('hidden', r.value !== 'new'); showSameText(el); }));
+  if (boxId === 'trustees') q('nric').addEventListener('input', e => {
+    const ic = digits(e.target.value);
+    hint(e.target, !ic ? '' : ic.length !== 12 ? `${ic.length}/12 digits` : ic === digits($('nric').value) ? "This is the policyholder's NRIC" : `DOB ${dobFromNric(ic)} · ${(+ic.slice(-1)) % 2 ? 'Male' : 'Female'}`, ic && (ic.length !== 12 || ic === digits($('nric').value)));
+  });
+  el.querySelector('.remove').addEventListener('click', () => { el.remove(); renumberPart(boxId, label, max); });
+  box.appendChild(el);
+  renumberPart(boxId, label, max);
+}
+function renumberPart(boxId, label, max) {
+  [...$(boxId).children].forEach((el, i) => el.querySelector('.title').textContent = `${label} ${i + 1}`);
+  $(boxId === 'trustees' ? 'addTrustee' : 'addConsent').classList.toggle('hidden', $(boxId).children.length >= max);
+}
+$('addTrustee').addEventListener('click', () => addPart('trustees', 'trusteeTpl', 2, 'Trustee'));
+$('addConsent').addEventListener('click', () => addPart('consents', 'consentTpl', 4, 'Person'));
+const pick = (c, g) => (c.querySelector(`.${g} input:checked`) || {}).value;
+function collectTrustees() {
+  return [...$('trustees').children].map(c => {
+    const q = k => c.querySelector(`[data-k="${k}"]`).value, passport = pick(c, 'idType') === 'passport';
+    const nat = pick(c, 'nat'), cob = pick(c, 'cob'), addr = pick(c, 'addrChoice');
+    return {
+      name: q('name'), ...(passport ? { passport: q('passport'), passportExpiry: q('passportExpiry'), dob: q('dob'), gender: pick(c, 'gender') } : { nric: digits(q('nric')) }),
+      nationality: nat === 'OTHERS' ? q('natOther') : nat, countryOfBirth: cob === 'OTHERS' ? q('cobOther') : cob,
+      tel: q('tel'), telCountry: q('telCountry'), telType: pick(c, 'telType'),
+      address: !addr ? undefined : addr === 'same' ? 'same' : { lines: [q('l1'), q('l2'), q('l3')].filter(Boolean), postcode: q('pc'), town: q('town'), country: q('country') },
+    };
+  });
+}
+const collectConsents = () => [...$('consents').children].map(c => { const q = k => c.querySelector(`[data-k="${k}"]`).value; return { name: q('name'), nric: q('nric'), date: q('date') || undefined }; });
+
+// ---------- screenshots ----------
+const drop = $('drop');
+drop.addEventListener('click', () => $('files').click());
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); loadShots(e.dataTransfer.files); });
+$('files').addEventListener('change', e => loadShots(e.target.files));
+
+async function loadShots(fileList) {
+  const files = [...fileList].filter(f => f.type.startsWith('image/'));
+  if (!files.length) return;
+  drop.textContent = `Reading ${files.length} screenshot(s)…`;
+  const images = await Promise.all(files.map(f => new Promise(ok => { const r = new FileReader(); r.onload = () => ok({ name: f.name, data: r.result }); r.readAsDataURL(f); })));
+  try {
+    const r = await (await fetch('/api/extract', { method: 'POST', body: JSON.stringify({ images }) })).json();
+    if (r.error) throw new Error(r.error);
+    const c = r.client;
+    if (c.policyNo) $('policyNo').value = c.policyNo;
+    if (c.name) $('name').value = c.name;
+    if (c.nric) $('nric').value = digits(c.nric);
+    if (c.muslim !== null && c.muslim !== undefined) setRadio('muslim', c.muslim ? 'yes' : 'no');
+    if (c.address) {
+      const [l1 = '', l2 = '', l3 = ''] = c.address.lines || [];
+      $('a1').value = l1; $('a2').value = l2; $('a3').value = l3;
+      $('apc').value = c.address.postcode || ''; $('atown').value = c.address.town || ''; $('acountry').value = c.address.country || 'MALAYSIA';
+    }
+    ['nric', 'policyNo'].forEach(id => $(id).dispatchEvent(new Event('input')));
+    const filled = [c.policyNo && 'Policy No.', c.name && 'name', c.nric && 'NRIC', c.muslim !== null && 'Muslim status', c.address && 'address'].filter(Boolean);
+    $('extractNotes').innerHTML = `<li class="ok">✓ Filled from screenshots: ${filled.join(', ') || 'nothing'}. Please check them below.</li>`
+      + r.notes.errors.map(e => `<li class="bad">✗ ${esc(e)}</li>`).join('')
+      + r.notes.warnings.map(e => `<li class="warn">• ${esc(e)}</li>`).join('');
+  } catch (e) { $('extractNotes').innerHTML = `<li class="bad">✗ ${esc(e.message)}</li>`; }
+  drop.innerHTML = 'Drop more screenshots here, or click to choose';
+}
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+
+// ---------- draft & approve ----------
+$('make').addEventListener('click', async () => {
+  $('make').disabled = true; $('makeStatus').textContent = 'Creating draft…';
+  const body = {
+    details: {
+      policyNo: $('policyNo').value, name: $('name').value, nric: $('nric').value,
+      muslim: radio('muslim'), status: radio('status'), children: $('children').value, date: $('formDate').value,
+      address: { lines: [$('a1').value, $('a2').value, $('a3').value], postcode: $('apc').value, town: $('atown').value, country: $('acountry').value },
+    },
+    nominees: collectNominees(), trustees: collectTrustees(), consents: collectConsents(), useSignature: $('useSig').checked,
+  };
+  try {
+    const r = await (await fetch('/api/draft', { method: 'POST', body: JSON.stringify(body) })).json();
+    if (r.error) throw new Error(r.error);
+    current = r;
+    const issues = r.errors.length + r.blanks.length;
+    $('review').innerHTML =
+      r.filled.map(([k, v]) => `<li class="ok">✓ ${esc(k)}: <b>${esc(v)}</b></li>`).join('')
+      + r.errors.map(e => `<li class="bad">✗ ${esc(e)}</li>`).join('')
+      + r.blanks.map(b => `<li class="bad">! Left blank: ${esc(b)}</li>`).join('')
+      + [...r.warnings, ...r.info].map(w => `<li class="warn">• ${esc(w)}</li>`).join('')
+      + `<li class="muted" style="margin-top:8px"><b>Stays manual:</b></li>` + r.manual.map(m => `<li class="muted">– ${esc(m)}</li>`).join('');
+    $('acceptRow').classList.toggle('hidden', !issues);
+    $('accept').checked = false;
+    $('approve').disabled = !!issues;
+    $('approveMsg').innerHTML = '';
+    $('preview').src = r.pdf + '#view=FitH';
+    $('openPdf').href = r.pdf;
+    $('resultBox').classList.remove('hidden');
+    $('resultBox').scrollIntoView({ behavior: 'smooth' });
+    $('makeStatus').textContent = issues ? `Draft created with ${issues} item(s) to check.` : 'Draft created.';
+  } catch (e) { $('makeStatus').textContent = 'Error: ' + e.message; }
+  $('make').disabled = false;
+});
+$('accept').addEventListener('change', () => { $('approve').disabled = !$('accept').checked; });
+$('approve').addEventListener('click', async () => {
+  const r = await (await fetch('/api/approve', { method: 'POST', body: JSON.stringify({ base: current.base, acceptBlanks: $('accept').checked }) })).json();
+  $('approveMsg').innerHTML = r.ok
+    ? `<div class="banner ok">✓ Approved. Saved to <b>${esc(r.final)}</b>. Print, get it signed, and submit as usual. <a href="#" id="reveal">Show in Finder</a></div>`
+    : `<div class="banner bad">${esc(r.message || r.error)}</div>`;
+  if (r.ok) { $('approve').disabled = true; $('reveal').onclick = e => { e.preventDefault(); fetch('/api/reveal', { method: 'POST' }); }; }
+});
+
+$('reset').addEventListener('click', e => { e.preventDefault(); if (confirm('Clear everything for a new client?')) location.reload(); });
+
+// ---------- date ----------
+const today = () => { const d = new Date(), p = n => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`; };
+$('formDate').value = today();
+$('formDate').addEventListener('input', e => {
+  const m = e.target.value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  const d = m && new Date(+m[3], +m[2] - 1, +m[1]);
+  const ok = d && d.getDate() === +m[1] && d.getMonth() === +m[2] - 1;
+  hint(e.target, !e.target.value ? 'Left blank: fill the date by hand.' : ok ? (e.target.value === today() ? 'Today' : '') : 'Use DD/MM/YYYY, e.g. ' + today(), e.target.value && !ok);
+});
+['a1', 'a2', 'a3', 'apc', 'atown'].forEach(id => $(id).addEventListener('input', () => [...$('nominees').children, ...$('trustees').children].forEach(showSameText)));
+
+// ---------- start ----------
+fetch('/api/agent').then(r => r.json()).then(a => {
+  $('agentInfo').innerHTML = a.name ? `<b>${esc(a.name)}</b> · IAC ${esc(a.code)} <span class="muted">(from agent.json)</span>` : 'No agent set in agent.json';
+  if (!a.hasSignature) { $('useSig').checked = false; $('useSig').disabled = true; }
+});
+addNominee();
+</script>
+</body>
+</html>
