@@ -1,0 +1,9 @@
+# Private: never publish client data, your signature or your agent details
+node_modules/
+input/
+output/
+final/
+logs/
+assets/
+agent.json
+.DS_Store
